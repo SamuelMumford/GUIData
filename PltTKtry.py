@@ -14,35 +14,6 @@ rec = False
 pltSec = False
 filename = "5_11_dummy6.txt"
 
-def openDev(rm):
-    srs = rm.open_resource('GPIB0::10::INSTR')
-    print(srs.query('*IDN?'))
-    dsp = rm.open_resource('GPIB0::12::INSTR')
-    print(dsp.query('*IDN?'))
-    therm = rm.open_resource('GPIB0::13::INSTR')
-    print(therm.query('*IDN?'))
-    return srs, dsp, therm
-
-def getData(srs, dsp, therm):
-    srs.clear()
-    srsR = float(srs.query('OUTP ? 3'))
-    srsT = float(srs.query('OUTP ? 4'))
-    
-    dsp.clear()
-    DSPstr = dsp.query('MP.')
-    vals = DSPstr.split(",")
-    dspR = float(vals[0])
-    dspT = float(vals[1])
-    
-    tempA = float(therm.query('INPUT A:TEMPER?'))
-    
-    retVal = np.asarray([0.0, tempA, srsR, srsT, dspR, dspT], dtype=float)
-    return retVal
-    
-rm = pyvisa.ResourceManager()
-print(rm.list_resources())
-srs, dsp, therm = openDev(rm)
-
 def recent():
     global rec
     global pltSec
@@ -81,6 +52,19 @@ def plot():
     plot4.plot(x, y4, '-') 
     plot5.plot(x, y5, '-')  
     plot6.plot(x, y6, '-')
+    
+    if(scaleBool[0] == True):
+        plot1.set_ylim(mins[0], maxs[0])
+    if(scaleBool[1] == True):
+        plot2.set_ylim(mins[1], maxs[1])
+    if(scaleBool[2] == True):
+        plot3.set_ylim(mins[2], maxs[2])
+    if(scaleBool[3] == True):
+        plot4.set_ylim(mins[3], maxs[3])
+    if(scaleBool[4] == True):
+        plot5.set_ylim(mins[4], maxs[4])
+    if(scaleBool[5] == True):
+        plot6.set_ylim(mins[5], maxs[5])
     
     plot1.set_title('I')
     plot2.set_title('Temp')
@@ -142,6 +126,19 @@ def plotR():
         plot5.plot(x[-val:], y5[-val:], '-')  
         plot6.plot(x[-val:], y6[-val:], '-')
         lab.config(text = 'Plotting Recent ' + str(val))
+        
+    if(scaleBool[0] == True):
+        plot1.set_ylim(mins[0], maxs[0])
+    if(scaleBool[1] == True):
+        plot2.set_ylim(mins[1], maxs[1])
+    if(scaleBool[2] == True):
+        plot3.set_ylim(mins[2], maxs[2])
+    if(scaleBool[3] == True):
+        plot4.set_ylim(mins[3], maxs[3])
+    if(scaleBool[4] == True):
+        plot5.set_ylim(mins[4], maxs[4])
+    if(scaleBool[5] == True):
+        plot6.set_ylim(mins[5], maxs[5])
     
     plot1.set_title('I')
     plot2.set_title('Temp')
@@ -158,6 +155,9 @@ def plotR():
 
 def plotSec():
     global output, fig
+    global scaleBool
+    global maxs
+    global mins
     clear_plot()
     
     valL = e2.get()
@@ -214,6 +214,19 @@ def plotSec():
         plot5.plot(x[left:right], y5[left:right], '-')  
         plot6.plot(x[left:right], y6[left:right], '-')
         lab.config(text = 'Plotting Section ' + str(left) + ' to ' + str(right))
+        
+    if(scaleBool[0] == True):
+        plot1.set_ylim(mins[0], maxs[0])
+    if(scaleBool[1] == True):
+        plot2.set_ylim(mins[1], maxs[1])
+    if(scaleBool[2] == True):
+        plot3.set_ylim(mins[2], maxs[2])
+    if(scaleBool[3] == True):
+        plot4.set_ylim(mins[3], maxs[3])
+    if(scaleBool[4] == True):
+        plot5.set_ylim(mins[4], maxs[4])
+    if(scaleBool[5] == True):
+        plot6.set_ylim(mins[5], maxs[5])
     
     plot1.set_title('I')
     plot2.set_title('Temp')
@@ -237,10 +250,36 @@ def clear_plot():
   
     output = None
     
+def reset():
+    global scaleBool
+    global maxs
+    global mins
+    scaleBool = [False]*6
+    mins = [0]*6
+    maxs = [0]*6
+    
+def takeScale():
+    global scaleBool
+    global maxs
+    global mins
+    index = e4.get()
+    miv = e5.get()
+    mav = e6.get()
+    try:
+        ind = int(index)
+        mini = float(miv)
+        maxi = float(mav)
+        mins[ind] = mini
+        maxs[ind] = maxi
+        scaleBool[ind] = True
+    except ValueError:
+        print('Invalid Entry')
+    
+    
 def get_data(index):
     loops = 5
     x.append(index)
-    ret = getData(srs, dsp, therm)
+    ret = [random.random(), random.random(), random.random(), random.random(), random.random(), random.random()]
     y1.append(ret[0])
     y2.append(ret[1])
     y3.append(ret[2])
@@ -288,39 +327,64 @@ window.geometry("1800x800")
 w = 1750
 h = 750
 
+scaleBool = [False]*6
+mins = [0]*6
+maxs = [0]*6
+
 canvas = Canvas(window, width=w, height=h, bg='white') 
-canvas.pack()
+canvas.grid(row=0, column=0)
 
 myFont = font.Font(family='Helvetica', size=20, weight='bold')
 outFont = font.Font(family='Helvetica', size=20, weight='bold')
 
 BB = Button(window, text="Plot All", command=base, bg='green', fg='white')
 BB['font'] = myFont
-BB.pack(side = LEFT)
+BB.place(x=0, y=800)
 
 myButton = Button(window, text="Plot Recent", command=recent, bg='yellow')
 myButton['font'] = myFont
-myButton.pack(side = LEFT)
+myButton.place(x=0, y=800)
 
 e1 = Entry(window, width=10)
 e1['font'] = outFont
-e1.pack(side = LEFT)
+e1.place(x=180, y=800)
 
 But2 = Button(window, text="Plot From Index A to B", command=sec, bg='yellow')
 But2['font'] = myFont
-But2.pack(side = LEFT)
+But2.place(x=340, y=800)
 
 e2 = Entry(window, width=10)
 e2['font'] = outFont
-e2.pack(side = LEFT)
+e2.place(x=660, y=800)
 
 e3 = Entry(window, width=10)
 e3['font'] = outFont
-e3.pack(side = LEFT)
+e3.place(x=810, y=800)
 
 lab = Label(window, text='Plotting All', bg = 'light blue')
 lab['font'] = myFont
-lab.pack(side=LEFT)
+lab.place(x=970, y=800)
+
+clearScale = Button(window, text="Autoscale Plots", command=reset, bg='green', fg='white')
+clearScale['font'] = myFont
+clearScale.place(x=0, y=860)
+
+TakeScale = Button(window, text="Take User Scale", command=takeScale, bg='blue', fg='white')
+TakeScale['font'] = myFont
+TakeScale.place(x=250, y=860)
+
+e4 = Entry(window, width=10)
+e4['font'] = outFont
+e4.place(x=500, y=860)
+
+e5 = Entry(window, width=10)
+e5['font'] = outFont
+e5.place(x=650, y=860)
+
+e6 = Entry(window, width=10)
+e6['font'] = outFont
+e6.place(x=800, y=860)
+
 
 window.after(100, get_data, 0)
 
